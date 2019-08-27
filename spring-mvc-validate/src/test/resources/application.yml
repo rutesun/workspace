@@ -1,0 +1,17 @@
+logging:
+  level:
+    org.springframework: INFO
+    com.zaxxer.hikari.HikariConfig: DEBUG
+
+spring:
+  jpa:
+    properties:
+      hibernate.show_sql: true
+      hibernate.format_sql: true
+    hibernate:
+      ddl-auto: create-drop
+  h2:
+    console:
+      enabled: true
+      settings:
+        trace: true
