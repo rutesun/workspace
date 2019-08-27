@@ -1,5 +1,7 @@
 package io.rutesun.validation
 
+import io.rutesun.validation.domain.User
+import io.rutesun.validation.repository.UserRepository
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith

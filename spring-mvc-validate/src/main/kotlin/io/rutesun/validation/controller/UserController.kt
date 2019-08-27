@@ -1,5 +1,6 @@
-package io.rutesun.validation
+package io.rutesun.validation.controller
 
+import io.rutesun.validation.domain.User
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.BindingResult
 import org.springframework.validation.annotation.Validated

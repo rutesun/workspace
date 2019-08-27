@@ -1,8 +1,8 @@
-package io.rutesun.validation
+package io.rutesun.validation.domain
 
 import java.util.ArrayList
 
-class ValidationError {
+class ValidationErrors {
     val errors: MutableList<Violation> = ArrayList()
     fun add(violation: Violation) = this.errors.add(violation)
 }
