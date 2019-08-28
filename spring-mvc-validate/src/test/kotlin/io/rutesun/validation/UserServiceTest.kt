@@ -4,18 +4,22 @@ import io.rutesun.validation.domain.Address
 import io.rutesun.validation.domain.User
 import io.rutesun.validation.service.UserService
 import io.rutesun.validation.service.UserServiceWithValidator
-import org.junit.Assert
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.assertDoesNotThrow
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.validation.SmartValidator
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 import java.time.LocalDate
 import javax.validation.ConstraintViolationException
 
-@RunWith(SpringRunner::class)
+@ExtendWith(SpringExtension::class)
 @SpringBootTest
 class UserServiceTest {
     @Autowired
@@ -24,60 +28,98 @@ class UserServiceTest {
     @Autowired
     private lateinit var userServiceWithValidator: UserServiceWithValidator
 
+    @DisplayName("Spring Default validator 확인")
     @Test
     fun validator() {
-        Assert.assertTrue(userServiceWithValidator.validator is LocalValidatorFactoryBean)
-        Assert.assertTrue(userServiceWithValidator.validator is SmartValidator)
+        assertTrue(userServiceWithValidator.validator is LocalValidatorFactoryBean)
+        assertTrue(userServiceWithValidator.validator is SmartValidator)
     }
 
-    @Test(expected = ConstraintViolationException::class)
+    private fun getInvalidUser() = User(name = "김", email = "", birthday = LocalDate.now().plusDays(1))
+    private fun getValidUser() = User(name = "홍길동", email = "honggildong@email.com", birthday = LocalDate.now().minusDays(1))
+
+    @DisplayName("유저 생성시 AOP를 통한 유효성 검사")
+    @Test
     fun createUser_fail() {
-        val user = User(name = "김", email = "", birthday = LocalDate.now().plusDays(1))
-        try {
+        val user = getInvalidUser().apply { id = 1 }
+        val exception = assertThrows<ConstraintViolationException> {
             userService.createUser(user)
-        } catch (e: RuntimeException) {
-            Assert.assertTrue(e is ConstraintViolationException)
-            println(e)
-            Assert.assertTrue(e.message!!.contains("email"))
-            Assert.assertTrue(e.message!!.contains("name"))
-            Assert.assertTrue(e.message!!.contains("birthday"))
-            throw e
         }
+
+        userService.createUser(user)
+        assertTrue(exception.message!!.contains("email"))
+        assertTrue(exception.message!!.contains("name"))
+        assertTrue(exception.message!!.contains("birthday"))
     }
 
-    @Test(expected = ConstraintViolationException::class)
+    @DisplayName("유저 생성시 validator 를 통한 검사")
+    @Test
     fun createUser_fail2() {
-        val user = User(name = "김", email = "", birthday = LocalDate.now())
-        try {
+        val user = getInvalidUser()
+        val exception = assertThrows<ConstraintViolationException> {
             userServiceWithValidator.createUser(user)
-        } catch (e: RuntimeException) {
-            Assert.assertTrue(e is ConstraintViolationException)
-            println(e)
-            Assert.assertTrue(e.message!!.contains("email"))
-            Assert.assertTrue(e.message!!.contains("name"))
-            Assert.assertFalse(e.message!!.contains("birthday"))
-            throw e
         }
+
+        assertTrue(exception.message!!.contains("email"))
+        assertTrue(exception.message!!.contains("name"))
+        assertTrue(exception.message!!.contains("birthday"))
     }
 
-    @Test(expected = ConstraintViolationException::class)
+    @DisplayName("유저 생성시 AOP를 통한 유효성 검사")
+    @Test
+    fun createUser_fail3() {
+        val exception = assertThrows<ConstraintViolationException> {
+            userService.createUser("", "", address = Address("1", "1"))
+        }
+
+        assertDoesNotThrow {
+            userServiceWithValidator.createUser("", "", address = Address("1", "1"))
+        }
+
+        assertTrue(exception.message!!.contains("email"))
+        assertTrue(exception.message!!.contains("name"))
+        assertTrue(exception.message!!.contains("zipCode"))
+        assertTrue(exception.message!!.contains("address"))
+    }
+
+    @DisplayName("유저 생성시 validate annotation 이 없는 경우")
+    @Test
+    fun createUser_fail4() {
+        val user = getInvalidUser()
+        userService.createUserPassValidation(user)
+    }
+
+    @DisplayName("중첩된 클래스의 유효성 검사")
+    @Test
     fun createUserWithAddress() {
-        val user = User(name = "김", email = "", birthday = LocalDate.now(), address = Address(zipCode = "1", address = ""))
-        try {
+        val user = getInvalidUser().copy(address = Address(zipCode = "1", address = ""))
+        val exception = assertThrows<ConstraintViolationException> {
             userServiceWithValidator.createUser(user)
-        } catch (e: RuntimeException) {
-            Assert.assertTrue(e is ConstraintViolationException)
-            println(e)
-            Assert.assertTrue(e.message!!.contains("email"))
-            Assert.assertTrue(e.message!!.contains("name"))
-            Assert.assertFalse(e.message!!.contains("birthday"))
-            throw e
         }
+
+        assertTrue(exception.message!!.contains("email"))
+        assertTrue(exception.message!!.contains("name"))
+        assertTrue(exception.message!!.contains("address"))
+        assertTrue(exception.message!!.contains("zipCode"))
     }
 
+    @DisplayName("정상 유저 생성")
     @Test
     fun createUser() {
-        val user = User(name = "홍길동", email = "honggildong@email.com", birthday = LocalDate.now().minusDays(1))
-        userService.createUser(user)
+        userService.createUser(getValidUser())
+    }
+
+    @DisplayName("유저 정보 업데이트")
+    @Test
+    fun updateUser() {
+        val exception = assertThrows<ConstraintViolationException> {
+            userService.updateUser(getValidUser())
+        }
+        assertTrue(exception.message!!.contains("user.id"))
+
+        assertDoesNotThrow {
+            userService.updateUser(getValidUser().apply { id = 1 })
+        }
+
     }
 }

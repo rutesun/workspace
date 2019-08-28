@@ -10,8 +10,13 @@ import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.validation.Valid
 import javax.validation.constraints.Email
+import javax.validation.constraints.Max
+import javax.validation.constraints.Min
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.PastOrPresent
+
+interface OnUpdate
+interface OnCreate
 
 @Entity
 data class User(
@@ -33,6 +38,8 @@ data class User(
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @field:Max(0, groups = [OnCreate::class])
+    @field:Min(1, groups = [OnUpdate::class])
     var id: Long = 0
 }
 
