@@ -2,9 +2,9 @@ spring:
   jpa:
     properties:
       hibernate:
-#        format_sql: true
+        format_sql: true
     generate-ddl: true
 
 logging:
   level:
-    com.zaxxer.hikari.HikariConfig: DEBUG
+    com.zaxxer.hikari.HikariConfig: DEBUGt
