@@ -1,4 +1,5 @@
-package com.rutesun.querydsl
+package com.rutesun.querydsl.domain
+
 
 import com.querydsl.core.QueryResults
 import com.querydsl.core.group.GroupBy.groupBy
@@ -123,10 +124,10 @@ class QueryDslSearchTest {
         assertEquals(query.fetchCount(), results.total)
 
         with(results.toPageImpl()) {
-            kotlin.test.assertEquals(this.totalPages, page.totalPages)
-            kotlin.test.assertEquals(this.totalElements, page.totalElements)
-            kotlin.test.assertEquals(this.pageable.offset, page.pageable.offset)
-            kotlin.test.assertEquals(this.content.first(), page.content.first())
+            assertEquals(this.totalPages, page.totalPages)
+            assertEquals(this.totalElements, page.totalElements)
+            assertEquals(this.pageable.offset, page.pageable.offset)
+            assertEquals(this.content.first(), page.content.first())
         }
     }
 
@@ -146,8 +147,8 @@ class QueryDslSearchTest {
         list.map { println(it) }
 
         with(list.first()) {
-            kotlin.test.assertTrue(this.tags.isNotEmpty())
-            kotlin.test.assertTrue(this.tags.map { it.label }.contains("devday"))
+            assertTrue(this.tags.isNotEmpty())
+            assertTrue(this.tags.map { it.label }.contains("devday"))
         }
 
         // fetchJoin 을 할 경우 같이 조회하기 때문에 N + 1이 발생하지 않음
