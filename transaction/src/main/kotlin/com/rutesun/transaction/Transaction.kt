@@ -32,7 +32,7 @@ internal class TransactionA (
         println("Start transaction 2")
         println("Outer transaction name = ${TransactionSynchronizationManager.getCurrentTransactionName()}")
         println("Outer transaction isolation level = ${TransactionSynchronizationManager.getCurrentTransactionIsolationLevel()}")
-        em.persist(Item(amount = 1000, name = "Item-Outer"))
+        em.persist(Item(amount = 1000, name = "Item-Outer")).also { em.flush() }
         try {
             transactionB.test2(rollback)
         } catch (e: RuntimeException) { }
@@ -59,7 +59,7 @@ internal class TransactionB(
         println("Tx: ${tx.toString()}\t${tx.hashCode()}")
         println("Inner transaction name = ${TransactionSynchronizationManager.getCurrentTransactionName()}")
         println("Inner transaction isolation level = ${TransactionSynchronizationManager.getCurrentTransactionIsolationLevel()}")
-        em.persist(Item(amount = 1000, name = "Item-Inner"))
+        em.persist(Item(amount = 1000, name = "Item-Inner")).also { em.flush() }
 
         if (rollback) {
             throw RuntimeException()
