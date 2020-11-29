@@ -43,3 +43,5 @@ gradle-app.setting
 **/gradlew
 **/gradlew.bat
 
+**/build/
+**/.idea/
