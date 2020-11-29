@@ -8,16 +8,10 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit4.SpringRunner
 import javax.persistence.EntityManager
 import javax.persistence.PersistenceContext
-import kotlin.test.assertEquals
 
 @RunWith(SpringRunner::class)
-@SpringBootTest(
-    properties = [
-        "spring.jpa.show-sql=false"
-    ]
-)
-internal class TransactionTest {
-
+@SpringBootTest
+class TransactionWithLockTest {
     @Autowired
     private lateinit var transactionA: TransactionA
 
@@ -30,32 +24,36 @@ internal class TransactionTest {
     @PersistenceContext
     private lateinit var em: EntityManager
 
+    private lateinit var item: Item
     @Before
     fun cleanUp() {
         itemRepository.deleteAll()
+        item = itemRepository.save(Item(amount = 1000, name = "스크류바"))
+        itemRepository.flush()
     }
 
     @Test
-    fun `트랜잭션 propagation 에 따른 name, isolation level`() {
-        transactionA.test1()
-        transactionA.test2()
+    fun `Tx propagation 에 따른 lock release`() {
+        transactionWithLock.updateItem(item.id)
+
+        var item = transactionWithLock.selectItem(item.id)
+        println(item)
     }
 
     @Test
-    fun `트랜잭션 롤백 테스트 - rollback`() {
-        transactionA.test2(rollback = true)
+    fun `Tx propagation 에 따른 lock release2`() {
+        transactionWithLock.updateItemWithNewTx(item.id)
 
-        val items = em.createQuery("select i from Item i").resultList
-        assertEquals(1, items.size)
+        var item = transactionWithLock.selectItem(item.id)
+        println(item)
     }
 
     @Test
-    fun `트랜잭션 롤백 테스트 - no rollback`() {
-        transactionA.test2(rollback = false)
+    fun `Tx propagation 에 따른 lock release3`() {
 
-        val items = em.createQuery("select i from Item i").resultList
-        assertEquals(2, items.size)
+        transactionWithLock.updateItemWithNestedTx(item.id)
+
+        var item = transactionWithLock.selectItem(item.id)
+        println(item)
     }
-
-
 }

@@ -10,7 +10,7 @@ data class Item(
     @Id
     @GeneratedValue
     val id: Long = 0L,
-    val amount: Int,
+    var amount: Int,
     @Column(length = 20)
     val name: String
 )
