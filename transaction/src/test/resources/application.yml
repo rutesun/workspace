@@ -1,0 +1,17 @@
+spring:
+  h2:
+    console:
+      enabled: true
+      path: /h2_db
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: root
+    password:
+    platform: h2
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    generate-ddl: true
+    show-sql: true

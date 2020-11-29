@@ -6,12 +6,13 @@ import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionSynchronizationManager
+import org.springframework.transaction.support.TransactionSynchronizationUtils
 import java.lang.RuntimeException
 import javax.persistence.EntityManager
 
 @Service
 @Transactional(isolation = Isolation.REPEATABLE_READ)
-class TransactionA(
+internal class TransactionA (
     private val em: EntityManager,
     private val transactionB: TransactionB
 ) {
@@ -25,17 +26,23 @@ class TransactionA(
     }
 
     fun test2(rollback: Boolean = false) {
+        val session = em.unwrap(Session::class.java)
+        val tx = session.transaction
+        println("Tx: ${tx}\t${tx.hashCode()}")
         println("Start transaction 2")
         println("Outer transaction name = ${TransactionSynchronizationManager.getCurrentTransactionName()}")
         println("Outer transaction isolation level = ${TransactionSynchronizationManager.getCurrentTransactionIsolationLevel()}")
         em.persist(Item(amount = 1000, name = "Item-Outer"))
-        transactionB.test2(rollback)
+        try {
+            transactionB.test2(rollback)
+        } catch (e: RuntimeException) { }
+        println("Outer transaction status = ${tx.status}")
         println("End transaction 2")
     }
 }
 
 @Service
-class TransactionB(
+internal class TransactionB(
     private val em: EntityManager
 ){
 
@@ -46,13 +53,16 @@ class TransactionB(
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
-    fun test2(rollback: Boolean) {
+    fun test2(rollback: Boolean = false) {
         val session = em.unwrap(Session::class.java)
-        session.transaction
+        val tx = session.transaction
+        println("Tx: ${tx.toString()}\t${tx.hashCode()}")
         println("Inner transaction name = ${TransactionSynchronizationManager.getCurrentTransactionName()}")
         println("Inner transaction isolation level = ${TransactionSynchronizationManager.getCurrentTransactionIsolationLevel()}")
         em.persist(Item(amount = 1000, name = "Item-Inner"))
 
-        if (rollback) throw RuntimeException("throw exception for rollback")
+        if (rollback) {
+            throw RuntimeException()
+        }
     }
 }
